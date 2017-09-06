@@ -18,12 +18,27 @@ class Base extends \Plugin
      */
     public function _load()
     {
+        $f3 = \Base::instance();
+
+        if (!is_file(__DIR__ . '/vendor/autoload.php')) {
+            $f3->set('error', 'Run `composer install` from app/plugin/elasticsearch/ to complete the Elasticsearch installation.');
+            return;
+        }
+
         // Load composer libraries
-        require_once 'vendor/autoload.php';
+        require_once __DIR__ . '/vendor/autoload.php';
 
         // Override search route
-        $f3 = \Base::instance();
         $f3->route("GET /search", "Plugin\Elasticsearch\Controller->search");
+    }
+
+    /**
+     * Generate page for admin panel
+     */
+    public function _admin()
+    {
+        $f3->set('elastic_client', $this->client());
+        echo \Helper\View::instance()->render("elasticsearch/view/admin.html");
     }
 
     /**
