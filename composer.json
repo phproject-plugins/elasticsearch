@@ -1,0 +1,15 @@
+{
+    "name": "phproject-plugins/elasticsearch",
+    "description": "Extend Phproject's search with Elasticsearch",
+    "type": "project",
+    "require": {
+        "elasticsearch/elasticsearch": "~5.0"
+    },
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Alan Hardman",
+            "email": "alan@phpizza.com"
+        }
+    ]
+}
