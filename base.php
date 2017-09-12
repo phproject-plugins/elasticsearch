@@ -13,6 +13,8 @@ class Base extends \Plugin
 {
     protected $client = null;
 
+    const INDEX_NAME = 'phproject_issues';
+
     /**
      * Initialize the plugin
      */
@@ -28,8 +30,9 @@ class Base extends \Plugin
         // Load composer libraries
         require_once __DIR__ . '/vendor/autoload.php';
 
-        // Override search route
-        $f3->route("GET /search", "Plugin\Elasticsearch\Controller->search");
+        // Add/override routes
+        $f3->route('GET /search', 'Plugin\Elasticsearch\Controller->search');
+        $f3->route('POST /search/reindex', 'Plugin\Elasticsearch\Controller->reindex');
     }
 
     /**
@@ -37,8 +40,9 @@ class Base extends \Plugin
      */
     public function _admin()
     {
-        $f3->set('elastic_client', $this->client());
-        echo \Helper\View::instance()->render("elasticsearch/view/admin.html");
+        $f3 = \Base::instance();
+        $f3->set('info', $this->client()->info());
+        echo \Helper\View::instance()->render('elasticsearch/view/admin.html');
     }
 
     /**
@@ -51,5 +55,48 @@ class Base extends \Plugin
             $this->client = ClientBuilder::create()->build();
         }
         return $this->client;
+    }
+
+    /**
+     * Delete all indexed records
+     *
+     * @return array
+     */
+    public function truncate()
+    {
+        $indices = $this->client()->indices();
+        $params = [
+            'index' => self::INDEX_NAME
+        ];
+        if ($indices->exists($params)) {
+            return $this->client()->indices()->delete($params);
+        }
+        return null;
+    }
+
+    /**
+     * Index all issues
+     *
+     * @return array
+     */
+    public function indexAll()
+    {
+        $detail = new \Model\Issue\Detail;
+        $issues = $detail->find(['deleted_date IS NULL']);
+        foreach ($issues as $issue) {
+            $params = [
+                'index' => self::INDEX_NAME,
+                'type' => 'issue',
+                'id' => $issue->id,
+                'body' => [
+                    'name' => $issue->name,
+                    'description' => $issue->description,
+                    'author_name' => $issue->author_name,
+                    'owner_name' => $issue->owner_name,
+                ]
+            ];
+            $this->client()->index($params);
+        }
+        return count($issues);
     }
 }

@@ -1,3 +1,57 @@
+<b>Server Name:</b> {{ @info.name }}<br>
+<b>Cluster:</b> <abbr title="{{ @info.cluster_uuid }}">{{ @info.cluster_name }}</abbr><br>
+<b>Version:</b> {{ @info.version.number }}<br>
+
+<br>
+
 <p>
-	{{  }}
+    <button class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modal-import" data-backdrop="static" data-keyboard="false">Import issues</button>
 </p>
+
+<div class="modal" id="modal-import" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Import issues</h4>
+            </div>
+            <div class="modal-body">
+                This process will re-import all issues from the site into the Elasticsearch index. It may take a while on a large site.
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default btn-sm" data-dismiss="modal">{{ @dict.cancel }}</button>
+                <button class="btn btn-primary btn-sm" data-import>Import issues</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.querySelector('[data-import]').addEventListener('click', () => {
+        document.querySelectorAll('#modal-import .btn').forEach((el) => {
+            el.disabled = true;
+        });
+        document.querySelector('#modal-import .btn-primary').innerHTML = 'Importing&hellip;';
+        var options = {
+            method: 'POST',
+            credentials: 'include'
+        };
+        fetch(BASE + '/search/reindex', options).then((response) => {
+            var contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                response.json().then((json) => {
+                    var modal = document.querySelector('#modal-import');
+                    modal.style.display = null;
+                    modal.classList.remove('in');
+                    document.querySelector('.modal-backdrop').remove();
+                    if (json.success) {
+                        alert('All data imported successfully.');
+                    } else {
+                        alert('Failed to import data successfully.');
+                    }
+                });
+            } else {
+                throw new TypeError('Invalid reponse :(');
+            }
+        });
+    });
+</script>
