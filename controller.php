@@ -36,6 +36,11 @@ class Controller extends \Controller
             ]);
             $f3->set('result', $result);
 
+        } catch (Exception $e) {
+            $f3->set('error', 'Unable to load results from Elasticsearch.');
+        }
+
+        if (!empty($result['hits']['total'])) {
             $ids = [];
             foreach ($result['hits']['hits'] as $hit) {
                 $ids[] = $hit['_id'];
@@ -44,11 +49,10 @@ class Controller extends \Controller
             $db = $f3->get('db.instance');
             $issues = $db->exec('SELECT * FROM issue_detail WHERE id IN (' . implode(',', $ids) . ') ORDER BY FIELD(id,' . implode(',', $ids) . ')');
             $f3->set('issues', $issues);
-        } catch (Exception $e) {
-            $f3->set('error', 'Unable to load results from Elasticsearch.');
+            $this->_render('elasticsearch/view/search.html');
+        } else {
+            $this->_render('elasticsearch/view/search-empty.html');
         }
-
-        $this->_render('elasticsearch/view/search.html');
     }
 
     /**
