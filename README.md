@@ -2,9 +2,12 @@
 
 *Easily add Elasticsearch support to your Phproject site!*
 
-**This plugin is under initial development and is not usable in a production environment yet!**
+## Requirements
 
-It is currently being built as a properly integrated implementation based on [a quick test script](https://gist.github.com/Alanaktion/0730bd63bdeeeeb77693d354e1e47ce4).
+- PHP 5.6.6 or higher, PHP 7.x recommended
+- Elasticsearch 5.x
+- Phproject 1.5.0 or higher, at least 1.6.0 recommended
+- Composer
 
 ## Setup
 
