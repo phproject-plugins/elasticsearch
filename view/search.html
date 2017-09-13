@@ -6,12 +6,35 @@
 <body>
 <include href="blocks/navbar.html" />
 <div class="container">
-    <ul>
-        <repeat group="{{ @result.hits.hits }}" value="{{ @hit }}">
-            <li>{{ @hit._id }}: {{ @hit._source.name }}</li>
-        </repeat>
-    </ul>
-    <pre>{~ print_r(@result.hits) ~}</pre>
+    <include href="blocks/dashboard-issue-list.html" />
+    <nav>
+        <ul class="pager">
+            <check if="{{ @GET.page > 0 }}">
+                <true>
+                    <li>
+                        <a href="{{ @BASE }}/search?q={{ @GET.q | esc }}&amp;page={{ @GET.page - 1 }}">{{ @dict.go_previous }}</a>
+                    </li>
+                </true>
+                <false>
+                    <li class="disabled">
+                        <span>{{ @dict.go_previous }}</span>
+                    </li>
+                </false>
+            </check>
+            <check if="{{ @GET.page < floor(@result.hits.total / 20) }}">
+                <true>
+                    <li>
+                        <a href="{{ @BASE }}/search?q={{ @GET.q | esc }}&amp;page={{ @GET.page + 1 }}">{{ @dict.go_next }}</a>
+                    </li>
+                </true>
+                <false>
+                    <li class="disabled">
+                        <span>{{ @dict.go_next }}</span>
+                    </li>
+                </false>
+            </check>
+        </ul>
+    </nav>
     <include href="blocks/footer.html" />
 </div>
 </body>
