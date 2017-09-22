@@ -115,6 +115,32 @@ class Base extends \Plugin
     }
 
     /**
+     * Bulk index an array of issues
+     * @param  \Model\Issue\Detail[] $issues
+     * @return void
+     */
+    public function indexIssues(array $issues)
+    {
+        $data = [];
+        foreach ($issues as $issue) {
+            $data[] = [
+                'index' => [
+                    '_index' => self::INDEX_NAME,
+                    '_type' => 'issue',
+                    '_id' => $issue->id,
+                ]
+            ];
+            $data[] = [
+                'name' => $issue->name,
+                'description' => $issue->description,
+                'author_name' => $issue->author_name,
+                'owner_name' => $issue->owner_name,
+            ];
+        }
+        $this->client()->bulk(['body' => $data]);
+    }
+
+    /**
      * Delete an issue
      * @param  \Model\Issue $issue
      * @return void
