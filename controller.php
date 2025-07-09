@@ -4,15 +4,12 @@ namespace Plugin\Elasticsearch;
 
 class Controller extends \Controller
 {
-    protected $client = null;
+    protected $client;
 
     /**
      * GET /search
-     *
-     * @param \Base $f3
-     * @return void
      */
-    public function search(\Base $f3)
+    public function search(\Base $f3): void
     {
         $args = $f3->get("GET");
         if (empty($args["page"])) {
@@ -35,8 +32,7 @@ class Controller extends \Controller
                 ],
             ]);
             $f3->set('result', $result);
-
-        } catch (Exception $e) {
+        } catch (Exception) {
             $f3->set('error', 'Unable to load results from Elasticsearch.');
         }
 
@@ -57,11 +53,8 @@ class Controller extends \Controller
 
     /**
      * POST /search/reindex
-     *
-     * @param \Base $f3
-     * @return void
      */
-    public function reindex(\Base $f3)
+    public function reindex(\Base $f3): void
     {
         $this->_requireAdmin();
         $base = Base::instance();

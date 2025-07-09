@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package  Elasticsearch
  * @author   Alan Hardman <alan@phpizza.com>
@@ -13,9 +14,9 @@ use Elasticsearch\Common\Exceptions\Missing404Exception;
 
 class Base extends \Plugin
 {
-    protected $client = null;
+    protected $client;
 
-    const INDEX_NAME = 'phproject_issues';
+    public const INDEX_NAME = 'phproject_issues';
 
     /**
      * Initialize the plugin
@@ -33,7 +34,7 @@ class Base extends \Plugin
         require_once __DIR__ . '/vendor/autoload.php';
 
         // Hook into issue events
-        $this->_hook('model/issue.after_save', [$this, 'issueSaveHook']);
+        $this->_hook('model/issue.after_save', $this->issueSaveHook(...));
 
         // Add/override routes
         $f3->route('GET /search', 'Plugin\Elasticsearch\Controller->search');
@@ -59,6 +60,7 @@ class Base extends \Plugin
         if ($this->client === null) {
             $this->client = ClientBuilder::create()->build();
         }
+
         return $this->client;
     }
 
@@ -76,6 +78,7 @@ class Base extends \Plugin
         if ($indices->exists($params)) {
             return $this->client()->indices()->delete($params);
         }
+
         return null;
     }
 
@@ -86,20 +89,19 @@ class Base extends \Plugin
      */
     public function indexAll()
     {
-        $detail = new \Model\Issue\Detail;
+        $detail = new \Model\Issue\Detail();
         $issues = $detail->find(['deleted_date IS NULL']);
         foreach ($issues as $issue) {
             $this->indexIssue($issue);
         }
+
         return count($issues);
     }
 
     /**
      * Index an issue
-     * @param  \Model\Issue\Detail $issue
-     * @return void
      */
-    public function indexIssue(\Model\Issue\Detail $issue)
+    public function indexIssue(\Model\Issue\Detail $issue): void
     {
         $this->client()->index([
             'index' => self::INDEX_NAME,
@@ -116,10 +118,8 @@ class Base extends \Plugin
 
     /**
      * Delete an issue
-     * @param  \Model\Issue $issue
-     * @return void
      */
-    public function deleteIssue(\Model\Issue $issue)
+    public function deleteIssue(\Model\Issue $issue): void
     {
         $this->client()->delete([
             'index' => self::INDEX_NAME,
@@ -131,20 +131,19 @@ class Base extends \Plugin
     /**
      * Handle issue saving
      * @param  $issue \Model\Issue
-     * @return void
      */
-    public function issueSaveHook(\Model\Issue $issue)
+    public function issueSaveHook(\Model\Issue $issue): void
     {
         if ($issue->deleted_date) {
             try {
                 $this->deleteIssue($issue);
-            } catch (Missing404Exception $e) {
+            } catch (Missing404Exception) {
                 // Silently ignore 404s
-            } catch (ElasticsearchException $e) {
+            } catch (ElasticsearchException) {
                 \Base::instance()->set('error', 'Failed to delete issue from Elasticsearch index.');
             }
         } else {
-            $detail = new \Model\Issue\Detail;
+            $detail = new \Model\Issue\Detail();
             $detail->load(['id = ?', $issue->id]);
             if ($detail->id) {
                 $this->indexIssue($detail);
